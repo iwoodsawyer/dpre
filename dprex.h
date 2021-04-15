@@ -221,7 +221,7 @@ extern void sg02nd(
         double *h,
         const ptrdiff_t *ldh,
         double *xe,
-        const ptrdiff_t *xe,
+        const ptrdiff_t *ldxe,
         ptrdiff_t *oufact,
         ptrdiff_t *iwork,
         double *dwork,

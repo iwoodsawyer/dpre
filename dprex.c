@@ -16,8 +16,10 @@
 #include "matrix.h"
 #include "math.h"
 #include "dprex.h"
+#include <stdio.h>
+#include <string.h>
 
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+void dprex_periodicqr(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     mwSize ndim, dims[3] = {1, 1, 1};
     mwSignedIndex m, n, p, nn, ilo, ihi, nre, iscl =0, info = 0; 
@@ -30,20 +32,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mwSignedIndex *ipivr, *ipiv, *iwork, *oufact;
     char job, jobg, jobs, fact, uplo, dico, hinv, compz, trana, trans;
     char flag, def, full = 'F', full2 = 'G', lower = 'L', norm = '1';
-    
-    /* check for proper number of arguments */
-    if (nrhs < 3) {
-        mexErrMsgTxt("DPREX requires at least three input arguments.");
-    }
-    if (nlhs < 1) {
-        mexErrMsgTxt("DPREX requires at least one output arguments.");
-    }
-    if (nrhs > 5) {
-        mexErrMsgTxt("Too many input arguments.");
-    }
-    if (nlhs > 3) {
-        mexErrMsgTxt("Too many output arguments.");
-    }
     
     
     /* check first input argument */
@@ -147,8 +135,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else {
         /* allocate matrix R=I if not provided */
         Rpr = mxCalloc(m*m*p,sizeof(double));
-        for (k=0; k<(mwIndex)p; k++) {
-            for (i=0; i<(mwIndex)m; i++) {
+        for (k=0; k<p; k++) {
+            for (i=0; i<m; i++) {
                 Rpr[k*m*m+i*m+i] = 1;
             }
         }
@@ -189,7 +177,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Slpr = mxCalloc(n*m*p,sizeof(double));
         jobs = 'Z';
     }
-
+    
+    /* check sixth input argument */
+    if (nrhs > 5) {
+        const mwSize *se = mxGetDimensions(prhs[5]);
+        if (se[0] != 0) {
+            mexErrMsgTxt( "The periodic QR method does not support generalized state space matrix E." );
+        }
+    }
     
     /* allocate output arrays */
     dims[0] = n;
@@ -228,7 +223,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     iwork = mxCalloc(m,sizeof(mwSignedIndex));
     ldwork = max(3*m,m*n);
     dwork = mxMalloc(ldwork*sizeof(double));
-    for (k=0; k<(mwIndex)p; k++) {
+    for (k=0; k<p; k++) {
         sb02mt( &jobg, &jobs, &fact, &uplo, &n, &m, 
                 &Alpr[k*n*n], &n, &Blpr[k*m*n], &n, &Qlpr[k*n*n], &n, &Rlpr[k*m*m], &m, 
                 &Slpr[k*m*n], &n, &ipivr[k*m], &oufact[2*k], &Glpr[k*n*n], &n,
@@ -292,7 +287,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     iwork = mxCalloc(2*n,sizeof(mwSignedIndex));
     ldwork = 6*n;
     dwork = mxMalloc(ldwork*sizeof(double));
-    for (k=0; k<(mwIndex)p; k++) {
+    for (k=0; k<p; k++) {
         if (iscl) {
             // apply scaling
             dlascl( &full2, &ldzero, &ldzero, &qnorm, &gnorm, &n, &n, &Qlpr[k*n*n], &n, &info );
@@ -354,7 +349,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     // copy lower part H to Z
     Zlpr = mxCalloc(nn*nn*p,sizeof(double));
-    for (k=0; k<(mwIndex)p; k++) {
+    for (k=0; k<p; k++) {
         dlacpy( &lower, &nn, &nn, &Hlpr[k*nn*nn], &nn, &Zlpr[k*nn*nn], &nn );
     }
     
@@ -418,7 +413,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nlhs > 2) {
         #if MX_HAS_INTERLEAVED_COMPLEX
         mxComplexDouble *pc = mxGetComplexDoubles(plhs[2]);
-        for (i=0; i<(mwIndex)nn; i++) {
+        for (i=0; i<nn; i++) {
             pc[i].real = wr[i];
             pc[i].imag = wi[i];
         }
@@ -434,7 +429,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
     // copy part Z to T and Z
     Tlpr = mxMalloc(p*n*n*sizeof(double));
-    for (k=0; k<(mwIndex)p; k++) {
+    for (k=0; k<p; k++) {
         dlacpy( &full, &n, &n, &Zlpr[k*nn*nn], &nn, &Tlpr[k*n*n], &n );
         dlacpy( &full, &n, &n, &Zlpr[k*nn*nn+n], &nn, &Xpr[k*n*n], &n );
     }
@@ -443,7 +438,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     // Perform MB02VD
     ipiv = mxCalloc(n,sizeof(mwSignedIndex));
-    for (k=0; k<(mwIndex)p; k++) {
+    for (k=0; k<p; k++) {
         mb02vd( &trans, &n, &n, &Tlpr[k*n*n], &n, ipiv, &Xpr[k*n*n], &n, &info );
         if (info != 0) {
             mxFree(Alpr);
@@ -463,8 +458,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree(Tlpr);  
     
     // Make sure the solution matrix X is symmetric.
-    for (k=0; k<(mwIndex)p; k++) {
-        for (i=0; i<(mwIndex)n; i++) {
+    for (k=0; k<p; k++) {
+        for (i=0; i<n; i++) {
             nre = n-i;
             daxpy( &nre, &one,  &Xpr[k*n*n], &n, &Xpr[k*n*n], &ldone);
             dscal( &nre, &half, &Xpr[k*n*n], &ldone);
@@ -483,7 +478,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         iwork = mxCalloc(m,sizeof(mwSignedIndex));
         ldwork = max(m*n,max(n+3*m+2,4*n+1));
         dwork = mxMalloc(ldwork*sizeof(double));
-        for (k=0; k<(mwIndex)p; k++) {
+        for (k=0; k<p; k++) {
             switch (oufact[2*k]) {
                 case 0:
                     fact = 'N';
@@ -500,7 +495,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             if (fact == 'C')
             {
                 dlacpy( &full, &n, &m, &Bpr[k*n*m], &n, &Blpr[k*n*m], &n );
-                if (k<(mwIndex)(p-1)) {
+                if (k<(p-1)) {
                     dlacpy( &uplo, &n, &n, &Xpr[(k+1)*n*n], &n, Xlpr, &n );
                 }
                 else {
@@ -531,7 +526,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 }
                 dlacpy( &full, &n, &m, &Bpr[k*n*m], &n, &Blpr[k*n*m], &n );
                 dlacpy( &full, &m, &m, &Rpr[k*m*m], &m, &Rlpr[k*m*m], &m );
-                if (k<(mwIndex)(p-1)) {
+                if (k<(p-1)) {
                     dlacpy( &full, &n, &n, &Xpr[(k+1)*n*n], &n, Xlpr, &n );
                 }
                 else {
@@ -581,4 +576,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree(oufact);
     mxFree(ipivr);
     mxFree(rnorm);
+}
+
+void dprex_complexqz(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+    //TODO
+}
+
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+    /* check for proper number of arguments */
+    if (nrhs < 3) {
+        mexErrMsgTxt("DPREX requires at least three input arguments.");
+    }
+    if (nlhs < 1) {
+        mexErrMsgTxt("DPREX requires at least one output arguments.");
+    }
+    if (nrhs > 7) {
+        mexErrMsgTxt("Too many input arguments.");
+    }
+    if (nlhs > 3) {
+        mexErrMsgTxt("Too many output arguments.");
+    }
+    
+    /* select method */
+    if ((nlhs == 7) && (strncmp(mxArrayToString(prhs[5]),"periodicqr",10) == 0)) {
+        dprex_periodicqr(nlhs, plhs, nrhs, prhs);
+    }
+    else {
+        dprex_complexqz(nlhs, plhs, nrhs, prhs);
+    }
+
 }
