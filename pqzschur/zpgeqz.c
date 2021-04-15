@@ -75,8 +75,7 @@ static integer c__2 = 2;
 	    doublereal *, doublecomplex *, doublecomplex *);
     static integer ifrstm;
     extern /* Subroutine */ int zlaset(char *, integer *, integer *, 
-	    doublecomplex *, doublecomplex *, doublecomplex *, integer *, 
-	    ftnlen);
+	    doublecomplex *, doublecomplex *, doublecomplex *, integer *);
     static doublereal smlnum;
     extern /* Subroutine */ int zlarnv(integer *, integer *, integer *, 
 	    doublecomplex *);
@@ -286,13 +285,13 @@ static integer c__2 = 2;
     *info = 0;
     lschr = lsame(job, "S");
     wantq = lsame(compq, "V") || lsame(compq, "I");
-    initq = lsame(compq, "I",);
+    initq = lsame(compq, "I");
 
 /*     Check the scalar input parameters. */
 
     if (! (lschr || lsame(job, "E"))) {
 	*info = -1;
-    } else if (! wantq && ! initq && ! lsame(compq, "N") {
+    } else if (! wantq && ! initq && ! lsame(compq, "N")) {
 	*info = -2;
     } else if (*k < 1) {
 	*info = -3;
@@ -587,8 +586,7 @@ L50:
 			    if (tol == 0.) {
 				i__3 = j - jlo + 2;
 				tol = zlanhs("1", &i__3, &a[jlo + (jlo + l * 
-					a_dim2) * a_dim1], lda1, &dwork[1], (
-					ftnlen)1);
+					a_dim2) * a_dim1], lda1, &dwork[1]);
 			    }
 /* Computing MAX */
 			    d__1 = ulp * tol;
@@ -638,8 +636,7 @@ L50:
 			    if (tol == 0.) {
 				i__3 = j - jlo + 2;
 				tol = zlanhs("1", &i__3, &a[jlo + (jlo + l * 
-					a_dim2) * a_dim1], lda1, &dwork[1], (
-					ftnlen)1);
+					a_dim2) * a_dim1], lda1, &dwork[1]);
 			    }
 /* Computing MAX */
 			    d__1 = ulp * tol;

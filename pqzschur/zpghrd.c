@@ -54,7 +54,7 @@ static integer c__1 = 1;
 	    doublecomplex *, integer *, integer *), zlacpy(char *, integer *,
 	    integer *, doublecomplex *, integer *, doublecomplex *, integer *
 	    ), zlartg(doublecomplex *, doublecomplex *, doublereal *,
-	     doublecomplex *, doublecomplex *), zlaset(char *, integer *, 
+	    doublecomplex *, doublecomplex *), zlaset(char *, integer *, 
 	    integer *, doublecomplex *, doublecomplex *, doublecomplex *, 
 	    integer *);
     static integer wrkopt;
@@ -62,11 +62,10 @@ static integer c__1 = 1;
 	    doublecomplex *, integer *, doublecomplex *, doublecomplex *, 
 	    integer *, integer *), zunmqr(char *, char *, integer *, integer 
 	    *, integer *, doublecomplex *, integer *, doublecomplex *, 
-	    doublecomplex *, integer *, doublecomplex *, integer *, integer *,
+	    doublecomplex *, integer *, doublecomplex *, integer *, integer *
 	    ), zunmrq(char *, char *, integer *, integer *, 
 	    integer *, doublecomplex *, integer *, doublecomplex *, 
-	    doublecomplex *, integer *, doublecomplex *, integer *, integer *,
-	    );
+	    doublecomplex *, integer *, doublecomplex *, integer *, integer *);
 
 
 /*     PURPOSE */

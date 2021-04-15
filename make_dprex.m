@@ -22,9 +22,9 @@ if strcmpi('GLNX86', computer) || strcmpi('GLNXA64', computer) ...
     LAPACK_PATH = ' -lmwlapack';
     SLICOT_PATH = ' -lmwslicot';
     if strcmpi('GLNX86', computer) || strcmpi('GLNXA64', computer)
-        COMPILE_OPTIONS = [COMPILE_OPTIONS,' -DSkip_f2c_Undefs',' -DNON_UNIX_STDIO'];
+        COMPILE_OPTIONS = [COMPILE_OPTIONS,' -DSkip_f2c_Undefs',' -DNON_UNIX_STDIO',' -DIEEE_COMPLEX_DIVIDE'];
     else
-        COMPILE_OPTIONS = [COMPILE_OPTIONS,' -DSkip_f2c_Undefs'];
+        COMPILE_OPTIONS = [COMPILE_OPTIONS,' -DSkip_f2c_Undefs',' -DIEEE_COMPLEX_DIVIDE'];
     end
 elseif strcmpi('PCWIN', computer) || strcmpi('PCWIN64', computer)
     % Windows (x86-32 or x86-64)
@@ -53,7 +53,7 @@ elseif strcmpi('PCWIN', computer) || strcmpi('PCWIN64', computer)
     end
     LAPACK_PATH = [' "' LAPACK_PATH '"'];
     SLICOT_PATH = [' "' SLICOT_PATH '"'];
-    COMPILE_OPTIONS = [COMPILE_OPTIONS,' -DMSDOS',' -DUSE_CLOCK',' -DNO_ONEXIT'];
+    COMPILE_OPTIONS = [COMPILE_OPTIONS,' -DMSDOS',' -DUSE_CLOCK',' -DNO_ONEXIT',' -DIEEE_COMPLEX_DIVIDE'];
 else
     error('Unsupported platform')
 end
@@ -74,5 +74,9 @@ COMPILE_OPTIONS = [ ' -O' COMPILE_OPTIONS ];
 % Comment next line to suppress compilation debugging info
 COMPILE_OPTIONS = [ ' -v' COMPILE_OPTIONS ];
 
-disp('Compiling pdare...')
-eval(['mex ', COMPILE_OPTIONS, ' dprex.c', BLAS_PATH, LAPACK_PATH, SLICOT_PATH]);
+disp('Compiling pdrex...')
+eval(['mex ', COMPILE_OPTIONS, ' -I.', ' -Ilibf2c', ' dprex.c',...
+    ' pqzschur/zlapr1.c', ' pqzschur/zpgeqz.c', ' pqzschur/zpgex2.c',...
+    ' pqzschur/zpghrd.c', ' pqzschur/zpgord.c', ' libf2c/cabs.c',...
+    ' libf2c/d_cnjg.c', ' libf2c/z_abs.c', ' libf2c/z_div.c',...
+    BLAS_PATH, LAPACK_PATH, SLICOT_PATH]);
