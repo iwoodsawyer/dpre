@@ -37,11 +37,11 @@ elseif strcmpi('PCWIN', computer) || strcmpi('PCWIN64', computer)
             case {'gnu'}
                 BLAS_PATH = fullfile(MATLAB_PATH, 'extern', 'lib', 'win64', 'mingw64', 'libmwblas.lib');
                 LAPACK_PATH = fullfile(MATLAB_PATH, 'extern', 'lib', 'win64', 'mingw64', 'libmwlapack.lib');
-                SLICOT_PATH = fullfile(pwd, 'mingw64', 'libmwslicot.lib');
+                SLICOT_PATH = fullfile(pwd, 'slicot', 'mingw64', 'libmwslicot.lib');
             case {'microsoft'}
                 BLAS_PATH = fullfile(MATLAB_PATH, 'extern', 'lib', 'win64', 'microsoft', 'libmwblas.lib');
                 LAPACK_PATH = fullfile(MATLAB_PATH, 'extern', 'lib', 'win64', 'microsoft', 'libmwlapack.lib');
-                SLICOT_PATH = fullfile(pwd, 'microsoft', 'libmwslicot.lib');
+                SLICOT_PATH = fullfile(pwd, 'slicot', 'microsoft', 'libmwslicot.lib');
             otherwise
                 disp('Try "mex -setup", because BLAS/LAPACK library is not available!')
         end

@@ -15,14 +15,14 @@
 # Linker output
 *.ilk
 *.map
-*.exp
+#*.exp
 
 # Precompiled Headers
 *.gch
 *.pch
 
 # Libraries
-*.lib
+#*.lib
 *.a
 *.la
 *.lo
