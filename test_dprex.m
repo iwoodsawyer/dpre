@@ -20,7 +20,7 @@ At(:,:,i) = sys.a(:,:,i)';
 Bt(:,:,i) = sys.c(:,:,i)';
 R(:,:,i) = sys.b(:,:,i)*sys.b(:,:,i)';
 end
-[X,Lt] = dpre(At,Bt,R); % periodic state observer
+[X,Lt] = dprex(At,Bt,R); % periodic state observer
 for i=1:p
 L(:,:,i) = Lt(:,:,i)';
 end
