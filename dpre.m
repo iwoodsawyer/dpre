@@ -14,8 +14,8 @@ function [X,K] = dpre(A,B,Q,R,S,E,method,tol,maxit)
 %  All input matrices have to be multidimensional arrays, like matrix 
 %  A(N,N,P) and B(N,R,P). Output matrices are also multidimensional arrays
 %  in the size of X(N,N,P) and K(R,N,P).
-
-%  [X,K]=DPRE(A,B,Q,R,S,E,METHOD,TOL) specifies the method to be used.
+%
+%  [X,K]=DPRE(A,B,Q,R,S,E,METHOD) specifies the method to be used.
 %    'newton'     - Newton backward iteration method (matlab)
 %    'cyclicqz'   - Cycliz QZ algorithm method (matlab)
 %    'periodicqr' - Periodic QR algorithm method (mex using slicot)
