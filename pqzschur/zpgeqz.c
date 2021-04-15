@@ -10,7 +10,7 @@
 		http://www.netlib.org/f2c/libf2c.zip
 */
 
-#include "f2c.h"
+#include "dprex.h"
 
 /* Table of constant values */
 
@@ -49,36 +49,18 @@ static integer c__2 = 2;
     static doublereal base, abst;
     static integer ntra;
     static doublecomplex temp;
-    extern /* Subroutine */ int zrot(integer *, doublecomplex *, integer *, 
-	    doublecomplex *, integer *, doublereal *, doublecomplex *);
     static integer iseed[4];
-    extern logical lsame(char *, char *);
     static logical lschr;
     static integer iiter, ilast, jiter;
-    extern /* Subroutine */ int zscal(integer *, doublecomplex *, 
-	    doublecomplex *, integer *);
     static integer maxit;
     static logical initq, wantq;
     static integer ziter;
-    extern /* Subroutine */ int dlabad(doublereal *, doublereal *), zlapr1(
-	    doublereal *, integer *, integer *, doublecomplex *, integer *, 
-	    doublecomplex *, doublecomplex *, integer *);
-    extern doublereal dlamch(char *);
     static doublereal safmin;
-    extern /* Subroutine */ int xerbla(char *, integer *);
     static doublereal safmax;
     static integer ilastm;
-    extern doublereal zlanhs(char *, integer *, doublecomplex *, integer *, 
-	    doublereal *);
     static integer ifirst;
-    extern /* Subroutine */ int zlartg(doublecomplex *, doublecomplex *, 
-	    doublereal *, doublecomplex *, doublecomplex *);
     static integer ifrstm;
-    extern /* Subroutine */ int zlaset(char *, integer *, integer *, 
-	    doublecomplex *, doublecomplex *, doublecomplex *, integer *);
     static doublereal smlnum;
-    extern /* Subroutine */ int zlarnv(integer *, integer *, integer *, 
-	    doublecomplex *);
 
 
 /*     PURPOSE */

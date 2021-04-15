@@ -10,7 +10,7 @@
 		http://www.netlib.org/f2c/libf2c.zip
 */
 
-#include "f2c.h"
+#include "dprex.h"
 
 /* Table of constant values */
 
@@ -41,31 +41,10 @@ static integer c__1 = 1;
     static integer jcol, ierr;
     static doublecomplex temp;
     static integer jrow;
-    extern /* Subroutine */ int zrot(integer *, doublecomplex *, integer *, 
-	    doublecomplex *, integer *, doublereal *, doublecomplex *);
-    extern logical lsame(char *, char *);
     static integer icols;
     static logical initq, wantq;
     static integer irows;
-    extern /* Subroutine */ int xerbla(char *, integer *), zgeqrf(
-	    integer *, integer *, doublecomplex *, integer *, doublecomplex *,
-	    doublecomplex *, integer *, integer *), zgerqf(integer *, 
-	    integer *, doublecomplex *, integer *, doublecomplex *, 
-	    doublecomplex *, integer *, integer *), zlacpy(char *, integer *,
-	    integer *, doublecomplex *, integer *, doublecomplex *, integer *
-	    ), zlartg(doublecomplex *, doublecomplex *, doublereal *,
-	    doublecomplex *, doublecomplex *), zlaset(char *, integer *, 
-	    integer *, doublecomplex *, doublecomplex *, doublecomplex *, 
-	    integer *);
     static integer wrkopt;
-    extern /* Subroutine */ int zungqr(integer *, integer *, integer *, 
-	    doublecomplex *, integer *, doublecomplex *, doublecomplex *, 
-	    integer *, integer *), zunmqr(char *, char *, integer *, integer 
-	    *, integer *, doublecomplex *, integer *, doublecomplex *, 
-	    doublecomplex *, integer *, doublecomplex *, integer *, integer *
-	    ), zunmrq(char *, char *, integer *, integer *, 
-	    integer *, doublecomplex *, integer *, doublecomplex *, 
-	    doublecomplex *, integer *, doublecomplex *, integer *, integer *);
 
 
 /*     PURPOSE */

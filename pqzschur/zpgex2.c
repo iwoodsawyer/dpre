@@ -10,7 +10,7 @@
 		http://www.netlib.org/f2c/libf2c.zip
 */
 
-#include "f2c.h"
+#include "dprex.h"
 
 /* Table of constant values */
 
@@ -42,18 +42,10 @@ static integer c__1 = 1;
     static doublecomplex rnd[3], snf;
     static doublereal rhs, ulp;
     static doublecomplex temp;
-    extern /* Subroutine */ int zrot(integer *, doublecomplex *, integer *, 
-	    doublecomplex *, integer *, doublereal *, doublecomplex *);
     static integer iseed[4], jiter;
     static logical usezq;
-    extern /* Subroutine */ int dlabad(doublereal *, doublereal *);
-    extern doublereal dlamch(char *);
     static doublereal safmin, safmax;
-    extern /* Subroutine */ int zlartg(doublecomplex *, doublecomplex *, 
-	    doublereal *, doublecomplex *, doublecomplex *);
     static doublereal smlnum;
-    extern /* Subroutine */ int zlarnv(integer *, integer *, integer *, 
-	    doublecomplex *);
 
 
 /*     PURPOSE */

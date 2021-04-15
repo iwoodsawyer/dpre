@@ -10,7 +10,7 @@
 		http://www.netlib.org/f2c/libf2c.zip
 */
 
-#include "f2c.h"
+#include "dprex.h"
 
 /* Subroutine */ int zlapr1(doublereal *base, integer *k, integer *s, 
 	doublecomplex *a, integer *inca, doublecomplex *alpha, doublecomplex *

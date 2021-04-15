@@ -15,13 +15,7 @@
 #include <blas.h>
 #endif
 #include <lapack.h>
-
-#ifndef min
-#define min(a,b) ((a) <= (b) ? (a) : (b))
-#endif
-#ifndef max
-#define max(a,b) ((a) >= (b) ? (a) : (b))
-#endif
+#include "f2c.h"
 
 // Conversion of optimal problems with coupling weighting terms to standard problems
 #define sb02mt FORTRAN_WRAPPER(sb02mt)
@@ -323,8 +317,110 @@ extern void mb03wd2(
         );
 
 
+// Schur decomposition and eigenvalues of a product of matrices in periodic Hessenberg form
+#define mb03wd2 FORTRAN_WRAPPER(mb03wd2)
 
 
 
+// Computes the general product of K complex scalars trying to avoid over- and underflow. 
+#define zlapr1 FORTRAN_WRAPPER(zlapr1)
+extern int zlapr1(
+        doublereal *base, 
+        integer *k, 
+        integer *s, 
+        doublecomplex *a, 
+        integer *inca, 
+        doublecomplex *alpha, 
+        doublecomplex *beta, 
+        integer *scal
+        );
 
+// Finding the eigenvalues of the complex generalized matrix product. 
+#define zpgeqz FORTRAN_WRAPPER(zpgeqz)
+extern int zpgeqz(
+        char *job, 
+        char *compq, 
+        integer *k, 
+        integer *n,	
+        integer *ilo, 
+        integer *ihi, 
+        integer *s, 
+        doublecomplex *a, 
+        integer *lda1, 
+        integer *lda2, 
+        doublecomplex *alpha, 
+        doublecomplex *beta,
+        integer *scal,
+        doublecomplex *q,
+        integer *ldq1,
+        integer *ldq2,
+        doublereal *dwork,
+        integer *ldwork,
+        doublecomplex *zwork,
+        integer *lzwork, 
+        integer *info
+        );
+
+// Swaps adjacent diagonal 1-by-1 blocks in a complex generalized matrix product. 
+#define zpgex2 FORTRAN_WRAPPER(zpgex2)
+extern int zpgex2(
+        logical *wantq, 
+        integer *k, 
+        integer *n, 
+        integer *j, 
+        integer *s, 
+        doublecomplex *a, 
+        integer *lda1, 
+        integer *lda2, 
+        doublecomplex *q, 
+        integer *ldq1, 
+        integer *ldq2, 
+        doublecomplex *zwork,
+        integer *info
+        );
+
+// Swaps adjacent diagonal 1-by-1 blocks in a complex generalized matrix product. 
+#define zpghrd FORTRAN_WRAPPER(zpghrd)
+extern int zpghrd(
+        char *compq, 
+        integer *k, 
+        integer *n, 
+        integer *ilo, 
+        integer *ihi, 
+        integer *s, 
+        doublecomplex *a, 
+        integer *lda1, 
+        integer *lda2, 
+        doublecomplex *q, 
+        integer *ldq1, 
+        integer *ldq2, 
+        doublereal *dwork, 
+        integer *ldwork, 
+        doublecomplex *zwork, 
+        integer *lzwork, 
+        integer *info
+        );
+
+// Reorders the periodic Schur decomposition of a complex generalized matrix product. 
+#define zpgord FORTRAN_WRAPPER(zpgord)
+extern int zpgord(
+        logical *wantq, 
+        integer *k, 
+        integer *n, 
+        integer *s, 
+        logical *select, 
+        doublecomplex *a, 
+        integer *lda1, 
+        integer *lda2, 
+        doublecomplex *alpha,
+        doublecomplex *beta,
+        integer *scal, 
+        doublecomplex *q, 
+        integer *ldq1, 
+        integer *ldq2, 
+        integer *m,
+        doublecomplex *zwork,
+        integer *lzwork,
+        integer *info
+        );
 
