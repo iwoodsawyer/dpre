@@ -15,7 +15,7 @@
 #include "mex.h"
 #include "matrix.h"
 #include "math.h"
-#include "dpre.h"
+#include "dprex.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
