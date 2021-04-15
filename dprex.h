@@ -121,7 +121,6 @@ extern void sb02ru(
         ptrdiff_t *info
         );
 
-
 // Constructing the extended Hamiltonian or symplectic matrix pairs for linear-quadratic optimization problems, and compressing them to 2N-by-2N matrices
 #define sb02oy FORTRAN_WRAPPER(sb02oy)
 extern void sb02oy(
@@ -158,7 +157,6 @@ extern void sb02oy(
         ptrdiff_t *info
         );
 
-
 // Optimal state feedback matrix for an optimal control problem
 #define sb02nd FORTRAN_WRAPPER(sb02nd)
 extern void sb02nd(
@@ -190,18 +188,24 @@ extern void sb02nd(
         ptrdiff_t *info
         );
 
-// Optimal state feedback matrix for an optimal control problem
-#define sb02nd FORTRAN_WRAPPER(sb02nd)
-extern void sb02nd(
+// Solution of continuous- or discrete-time algebraic Riccati equations for descriptor systems
+#define sg02nd FORTRAN_WRAPPER(sg02nd)
+extern void sg02nd(
         const char *dico,
+        const char *jobe,
+        const char *job,
+        const char *jobx,
         const char *fact,
         const char *uplo,
         const char *jobl,
+        const char *trans,
         const ptrdiff_t *n,
-        const ptrdiff_t *m,
+        const ptrdiff_t *m,        
         const ptrdiff_t *p,
         const double *a,
         const ptrdiff_t *lda,
+        const double *e,
+        const ptrdiff_t *lde,
         double *b,
         const ptrdiff_t *ldb,
         double *r,
@@ -214,6 +218,10 @@ extern void sb02nd(
         const double *rnorm,
         double *k,
         const ptrdiff_t *ldk,
+        double *h,
+        const ptrdiff_t *ldh,
+        double *xe,
+        const ptrdiff_t *xe,
         ptrdiff_t *oufact,
         ptrdiff_t *iwork,
         double *dwork,
@@ -291,35 +299,6 @@ extern void mb03wd(
         const ptrdiff_t *ldwork,
         ptrdiff_t *info
         );
-
-// Schur decomposition and eigenvalues of a product of matrices in periodic Hessenberg form
-#define mb03wd2 FORTRAN_WRAPPER(mb03wd2)
-extern void mb03wd2(
-        const char *job,
-        const char *compz,
-        const ptrdiff_t *n,
-        const ptrdiff_t *p,
-        const ptrdiff_t *ilo,
-        const ptrdiff_t *ihi,
-        const ptrdiff_t *iloz,
-        const ptrdiff_t *ihiz,
-        double *h,
-        const ptrdiff_t *ldh1,
-        const ptrdiff_t *ldh2,
-        double *z,
-        const ptrdiff_t *ldz1,
-        const ptrdiff_t *ldz2,
-        double *wr,
-        double *wi,
-        double *dwork,
-        const ptrdiff_t *ldwork,
-        ptrdiff_t *info
-        );
-
-
-// Schur decomposition and eigenvalues of a product of matrices in periodic Hessenberg form
-#define mb03wd2 FORTRAN_WRAPPER(mb03wd2)
-
 
 
 // Computes the general product of K complex scalars trying to avoid over- and underflow. 
