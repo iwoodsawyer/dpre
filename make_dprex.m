@@ -72,7 +72,7 @@ end
 COMPILE_OPTIONS = [ ' -O' COMPILE_OPTIONS ];
 
 % Comment next line to suppress compilation debugging info
-%COMPILE_OPTIONS = [ ' -v' COMPILE_OPTIONS ];
+COMPILE_OPTIONS = [ ' -v' COMPILE_OPTIONS ];
 
 disp('Compiling pdare...')
-eval(['mex ', COMPILE_OPTIONS, ' dpre.c', BLAS_PATH, LAPACK_PATH, SLICOT_PATH]);
+eval(['mex ', COMPILE_OPTIONS, ' dprex.c', BLAS_PATH, LAPACK_PATH, SLICOT_PATH]);

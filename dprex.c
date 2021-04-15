@@ -1,7 +1,7 @@
 /*
  * Periodic Discrete-time Algebraic Riccati Equation (DPRE)
  *
- * [X,K] = dpre(A,B,Q,R,S,E)
+ * [X,K] = dprex(A,B,Q,R,S,E)
  *
  * compile command:
  * mex -O dpre.c libmwblas.lib libmwlapack.lib libmwslicot.lib (>= R2012A)
@@ -20,23 +20,23 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     mwSize ndim, dims[3] = {1, 1, 1};
-    ptrdiff_t m, n, p, nn, ilo, ihi, nre, iscl =0, info = 0; 
-    ptrdiff_t ldwork, ldtau, ldmin = -1, ldzero = 0, ldone = 1;
-    mwIndex i, j, k;
+    mwSignedIndex m, n, p, nn, ilo, ihi, nre, iscl =0, info = 0; 
+    mwSignedIndex ldwork, ldtau, ldmin = -1, ldzero = 0, ldone = 1;
+    mwSignedIndex i, j, k;
     double one = 1.0, half = 0.5, qnorm = 0.0, gnorm = 0.0; 
     double *Apr, *Bpr, *Qpr, *Rpr, *Spr, *Xpr, *Kpr;
     double *Alpr, *Blpr, *Qlpr, *Rlpr, *Slpr, *Glpr, *Hlpr, *Zlpr, *Xlpr, *Tlpr;
     double *dwork, *tau, *wr, *wi, *rnorm, twork[2] = {0,0};
-    ptrdiff_t *ipivr, *ipiv, *iwork, *oufact;
+    mwSignedIndex *ipivr, *ipiv, *iwork, *oufact;
     char job, jobg, jobs, fact, uplo, dico, hinv, compz, trana, trans;
     char flag, def, full = 'F', full2 = 'G', lower = 'L', norm = '1';
     
     /* check for proper number of arguments */
     if (nrhs < 3) {
-        mexErrMsgTxt("DPRE requires at least three input arguments.");
+        mexErrMsgTxt("DPREX requires at least three input arguments.");
     }
     if (nlhs < 1) {
-        mexErrMsgTxt("DPRE requires at least one output arguments.");
+        mexErrMsgTxt("DPREX requires at least one output arguments.");
     }
     if (nrhs > 5) {
         mexErrMsgTxt("Too many input arguments.");
@@ -222,10 +222,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     flag = 'M';
     def = 'D';
     Glpr = mxCalloc(n*n*p,sizeof(double));
-    oufact = mxCalloc(p*2,sizeof(ptrdiff_t));
-    ipivr = mxCalloc(p*m,sizeof(ptrdiff_t));
+    oufact = mxCalloc(p*2,sizeof(mwSignedIndex));
+    ipivr = mxCalloc(p*m,sizeof(mwSignedIndex));
     rnorm = mxCalloc(p,sizeof(double));
-    iwork = mxCalloc(m,sizeof(ptrdiff_t));
+    iwork = mxCalloc(m,sizeof(mwSignedIndex));
     ldwork = max(3*m,m*n);
     dwork = mxMalloc(ldwork*sizeof(double));
     for (k=0; k<(mwIndex)p; k++) {
@@ -239,7 +239,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         //         iwork, twork, &ldwork, &info);
         
         if (info == 0) {
-            ldwork = max(ldwork,max((ptrdiff_t)twork[0],max(3*m,m*n)));
+            ldwork = max(ldwork,max((mwSignedIndex)twork[0],max(3*m,m*n)));
             dwork = mxRealloc(dwork,ldwork*sizeof(double));
             sb02mt( &jobg, &jobs, &fact, &uplo, &n, &m,
                     &Alpr[k*n*n], &n, &Blpr[k*m*n], &n, &Qlpr[k*n*n], &n, &Rlpr[k*m*m], &m,
@@ -289,7 +289,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     hinv = 'D';
     trana = 'N';
     Hlpr = mxCalloc(nn*nn*p,sizeof(double));
-    iwork = mxCalloc(2*n,sizeof(ptrdiff_t));
+    iwork = mxCalloc(2*n,sizeof(mwSignedIndex));
     ldwork = 6*n;
     dwork = mxMalloc(ldwork*sizeof(double));
     for (k=0; k<(mwIndex)p; k++) {
@@ -362,7 +362,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // Perform MB03VY
     mb03vy( &nn, &p, &ilo, &ihi, Zlpr, &nn, &nn, tau, &ldtau, twork, &ldmin, &info );
     if (info == 0) {
-        ldwork = max(ldwork,max((ptrdiff_t)twork[0],n));
+        ldwork = max(ldwork,max((mwSignedIndex)twork[0],n));
         dwork = mxMalloc(ldwork*sizeof(double));
         mb03vy( &nn, &p, &ilo, &ihi, Zlpr, &nn, &nn, tau, &ldtau, dwork, &ldwork, &info );
     }
@@ -442,7 +442,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     
     // Perform MB02VD
-    ipiv = mxCalloc(n,sizeof(ptrdiff_t));
+    ipiv = mxCalloc(n,sizeof(mwSignedIndex));
     for (k=0; k<(mwIndex)p; k++) {
         mb02vd( &trans, &n, &n, &Tlpr[k*n*n], &n, ipiv, &Xpr[k*n*n], &n, &info );
         if (info != 0) {
@@ -480,7 +480,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // perform SB02ND
     if (nlhs > 1) {
         Xlpr = mxCalloc(n*n,sizeof(double));
-        iwork = mxCalloc(m,sizeof(ptrdiff_t));
+        iwork = mxCalloc(m,sizeof(mwSignedIndex));
         ldwork = max(m*n,max(n+3*m+2,4*n+1));
         dwork = mxMalloc(ldwork*sizeof(double));
         for (k=0; k<(mwIndex)p; k++) {
@@ -514,7 +514,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                         &oufact[2*k], iwork, twork, &ldmin, &info);
                 
                 if (info == 0) {
-                    ldwork = max(ldwork,max((ptrdiff_t)twork[0],m*n));
+                    ldwork = max(ldwork,max((mwSignedIndex)twork[0],m*n));
                     dwork = mxRealloc(dwork,ldwork*sizeof(double));
                     sb02nd( &dico, &fact, &uplo, &jobs, &n, &m, &m,
                             &Apr[k*n*n], &n, &Blpr[k*m*n], &n,
@@ -545,7 +545,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                         &oufact[2*k], iwork, twork, &ldmin, &info);
                 
                 if (info == 0) {
-                    ldwork = max(ldwork,max((ptrdiff_t)twork[0],max(n+3*m+2,4*n+1)));
+                    ldwork = max(ldwork,max((mwSignedIndex)twork[0],max(n+3*m+2,4*n+1)));
                     dwork = mxRealloc(dwork,ldwork*sizeof(double));
                     sb02nd( &dico, &fact, &uplo, &jobs, &n, &m, &m,
                             &Apr[k*n*n], &n, &Blpr[k*m*n], &n,
