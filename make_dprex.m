@@ -72,7 +72,7 @@ end
 COMPILE_OPTIONS = [ ' -O' COMPILE_OPTIONS ];
 
 % Comment next line to suppress compilation debugging info
-%COMPILE_OPTIONS = [ ' -v' COMPILE_OPTIONS ];
+COMPILE_OPTIONS = [ ' -v' COMPILE_OPTIONS ];
 
 disp('Compiling pdrex...')
 eval(['mex ', COMPILE_OPTIONS, ' -I.', ' -Ilibf2c', ' dprex.c',...
