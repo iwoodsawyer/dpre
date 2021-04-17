@@ -1,7 +1,7 @@
 /*
  * Periodic Discrete-time Algebraic Riccati Equation (DPRE)
  *
- * [X,K] = dprex(A,B,Q,R,S,E)
+ * [X,K,L] = dprex(A,B,Q,R,S,E,method)
  *
  * compile command:
  * mex -O dpre.c libmwblas.lib libmwlapack.lib libmwslicot.lib (>= R2012A)
@@ -610,7 +610,6 @@ void dprex_complexqz(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgTxt( "Input array A must have 2 or 3 dimensions." );
     }
     n = sa[0];
-    nn = 2*n;
     if (n != sa[1]) {
         mexErrMsgTxt( "The number of rows and colums of array A must be the same size." );
     }
@@ -627,6 +626,7 @@ void dprex_complexqz(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     const mwSize *sb = mxGetDimensions(prhs[1]);
     m = sb[1];
+    nn = 2*n+m;
     if (n != sb[0]) {
         mexErrMsgTxt( "The number of rows of arrays A and B must be the same size." );
     }
@@ -807,16 +807,7 @@ void dprex_complexqz(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         sb02oy( &type, &dico, &jobb, &fact, &uplo, &jobs, &jobe, &n, &m, &m,
                 &Apr[k*n*n], &n, &Bpr[k*m*n], &n, &Qpr[k*n*n], &n, &Rpr[k*m*m], &m,
                 &Spr[k*m*n], &n, &Epr[k*m*n], &n, &AFlpr[k*nn*nn], &nn, &BFlpr[k*nn*nn], &nn,
-                &tol, iwork, twork, &ldmin, &info );
-        
-        if (info == 0) {
-            ldwork = max(ldwork,max((mwSignedIndex)twork[0],max(3*m,2*n+m)));
-            dwork = mxRealloc(dwork,ldwork*sizeof(double));
-            sb02oy( &type, &dico, &jobb, &fact, &uplo, &jobs, &jobe, &n, &m, &m,
-                    &Apr[k*n*n], &n, &Bpr[k*m*n], &n, &Qpr[k*n*n], &n, &Rpr[k*m*m], &m,
-                    &Spr[k*m*n], &n, &Epr[k*m*n], &n, &AFlpr[k*nn*nn], &nn, &BFlpr[k*nn*nn], &nn,
-                    &tol, iwork, dwork, &ldwork, &info );
-        }
+                &tol, iwork, dwork, &ldwork, &info );
         if (info != 0) {
             mxFree(Blpr);
             mxFree(Rlpr);
@@ -910,6 +901,26 @@ void dprex_complexqz(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree(dwork);
     mxFree(zwork);
     
+    if (nlhs > 2) {
+        #if MX_HAS_INTERLEAVED_COMPLEX
+        mxComplexDouble *pc = mxGetComplexDoubles(plhs[2]);
+        for (i=0; i<nn; i++) {
+            pc[i].real = scalbn(alpha[2*i]/beta[2*i],scal[i]);
+            pc[i].imag = scalbn(alpha[2*i+1]/beta[2*i+1],scal[i]);
+        }
+        #else
+        double *pr = mxGetData(nlhs[2]);
+        double *pi = mxGetImagData(nlhs[2]);
+        for (i=0; i<nn; i++) {
+            pr[i] = scalbn(alpha[2*i]/beta[2*i],scale[i]);
+            pi[i] = scalbn(alpha[2*i+1]/beta[2*i+1],scale[i]);
+        }
+        #endif
+    }
+    mxFree(alpha);
+    mxFree(beta); 
+    mxFree(scal);
+    
 
     // copy part Z to T and Z
     Tlpr = mxMalloc(p*n*n*sizeof(double));
@@ -921,6 +932,7 @@ void dprex_complexqz(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     
     // Perform MB02VD
+    trans = 'N';
     ipiv = mxCalloc(n,sizeof(mwSignedIndex));
     for (k=0; k<p; k++) {
         mb02vd( &trans, &n, &n, &Tlpr[k*n*n], &n, ipiv, &Xpr[k*n*n], &n, &info );
@@ -952,7 +964,6 @@ void dprex_complexqz(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nlhs > 1) {
         job = 'K';
         jobx = 'N';
-        trans = 'N';
         Xlpr = mxCalloc(n*n,sizeof(double));
         ipiv = mxCalloc(n,sizeof(mwSignedIndex));
         oufact = mxCalloc(p*2,sizeof(mwSignedIndex));
@@ -971,7 +982,7 @@ void dprex_complexqz(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     &n, &m, &m, &Apr[k*n*n], &n, &Epr[k*n*n], &n,
                     &Blpr[k*m*n], &n, &Rlpr[k*m*m], &m, ipiv, &Spr[k*m*n], &n,
                     Xlpr, &n, &rnorm[k], &Kpr[k*m*n], &m, NULL, &ldone, NULL, &ldone,
-                    &oufact[2*k], iwork, twork, &ldmin, &info);
+                    &oufact[2*k], iwork, twork, &ldmin, &info );
             
             if (info == 0) {
                 ldwork = max(ldwork,max((mwSignedIndex)twork[0],max(n+3*m+2,4*n+1)));
@@ -980,7 +991,7 @@ void dprex_complexqz(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                         &n, &m, &m, &Apr[k*n*n], &n, &Epr[k*n*n], &n, 
                         &Blpr[k*m*n], &n, &Rlpr[k*m*m], &m, ipiv, &Spr[k*m*n], &n,
                         Xlpr, &n, &rnorm[k], &Kpr[k*m*n], &m, NULL, &ldone, NULL, &ldone,
-                        &oufact[2*k], iwork, dwork, &ldwork, &info);
+                        &oufact[2*k], iwork, dwork, &ldwork, &info );
             }
             
             if (info != 0) {

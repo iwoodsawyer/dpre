@@ -19,6 +19,10 @@ function [X,K] = dprex(A,B,Q,R,S,E,method)
 %    'periodicqr' - Periodic QR algorithm method (mex using slicot)
 %    'complexqz'  - Periodic complex QZ algorithm method (mex using pqzschur)
 %
+%  [X,K,L]=DPREX(A,B,Q,R,S,E,METHOD) also returns the computed stable 
+%  eigenvalues L of the corresponding symplectic matrix with 'periodicqr',
+%  or the corresponding symplectic matrix pairs with 'complexqz',
+%
 %  See also DPRE, DARE.
 
 %  The mex-file code uses calls the periodic Hessenberg function MB03VD/MB03VY 

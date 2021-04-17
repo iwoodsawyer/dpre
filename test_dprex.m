@@ -3,7 +3,7 @@ clear A B At Bt Q R L Lt
 ns = 4;
 nu = 3;
 ny = 5;
-p = 36;
+p = 3;
 
 sys = c2d(rss(ns,ny,nu,p),1/p);
 for i=1:p
@@ -12,7 +12,7 @@ B(:,:,i) = sys.b(:,:,i);
 Q(:,:,i) = sys.c(:,:,i)'*sys.c(:,:,i);
 end
 tic
-[X,K] = dpre(A,B,Q); % periodic state feedback
+[X,K] = dprex(A,B,Q); % periodic state feedback
 toc
  
 for i=1:p
