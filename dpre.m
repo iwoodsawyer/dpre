@@ -156,7 +156,7 @@ else % default cyclicqz method
     % build the periodic matrix pairs
     for i = 1:p
         L(:,:,i) = [A(:,:,i) zeros(n) B(:,:,i);
-            -Q(:,:,i) E(:,:,i) -S(:,:,i);
+            -Q(:,:,i) E(:,:,i)' -S(:,:,i);
             S(:,:,i)' zeros(r,n) R(:,:,i)];
         M(:,:,i) = [E(:,:,i) zeros(n,n+r);
             zeros(n) A(:,:,i)' zeros(n,r);
