@@ -16,11 +16,11 @@ tic
 toc
  
 for i=1:p
-At(:,:,i) = sys.a(:,:,i)';
-Bt(:,:,i) = sys.c(:,:,i)';
-R(:,:,i) = sys.b(:,:,i)*sys.b(:,:,i)';
+At(:,:,p-i+1) = sys.a(:,:,i)';
+Bt(:,:,p-i+1) = sys.c(:,:,i)';
+R(:,:,p-i+1) = sys.b(:,:,i)*sys.b(:,:,i)';
 end
 [X,Lt] = dpre(At,Bt,R); % periodic state observer
 for i=1:p
-L(:,:,i) = Lt(:,:,i)';
+L(:,:,i) = Lt(:,:,p-i+1)';
 end

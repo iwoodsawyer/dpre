@@ -12,15 +12,17 @@ B(:,:,i) = sys.b(:,:,i);
 Q(:,:,i) = sys.c(:,:,i)'*sys.c(:,:,i);
 end
 tic
-[X,K] = dprex(A,B,Q); % periodic state feedback
+[X1,K1,E1] = dprex(A,B,Q,[],[],[],'periodicqr'); % periodic state feedback
+[X2,K2,E2] = dprex(A,B,Q,[],[],[],'complexqz'); % periodic state feedback
 toc
  
 for i=1:p
-At(:,:,i) = sys.a(:,:,i)';
-Bt(:,:,i) = sys.c(:,:,i)';
-R(:,:,i) = sys.b(:,:,i)*sys.b(:,:,i)';
+At(:,:,p-i+1) = sys.a(:,:,i)';
+Bt(:,:,p-i+1) = sys.c(:,:,i)';
+R(:,:,p-i+1) = sys.b(:,:,i)*sys.b(:,:,i)';
 end
-[X,Lt] = dprex(At,Bt,R); % periodic state observer
+[X1t,L1t,Et1] = dprex(At,Bt,R,[],[],[],'periodicqr'); % periodic state observer
+[X1t,L2t,Et2] = dprex(At,Bt,R,[],[],[],'complexqz'); % periodic state observer
 for i=1:p
-L(:,:,i) = Lt(:,:,i)';
+L(:,:,i) = L1t(:,:,p-i+1)';
 end
