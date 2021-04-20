@@ -1,0 +1,1 @@
+The lib files are created from the libmwslicot.dll in Matlab using lib (Microsoft) or dlltool (MinGW)
