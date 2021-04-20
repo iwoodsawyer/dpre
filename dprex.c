@@ -332,8 +332,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     mxFree(dwork);
     mxFree(iwork);
-    
-    if (0) {//((qnorm > gnorm) && (gnorm > 0.0)) {
+     
+    if ((qnorm > gnorm) && (gnorm > 0.0)) {
         iscl = 1; // Do scaling
         for (k=0; k<p; k++) {
             // apply scaling
@@ -345,7 +345,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     // Perform selected method
     if (isqr) { // SLICOT
-        
+        //mexPrintf("SLICOT\n");
         // Perform SB02RU
         dico = 'D';
         hinv = 'D';
@@ -516,7 +516,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     
     else { // PQZSCHUR
-        
+        //mexPrintf("PQZSCHUR\n");
         // Perform SB02OY
         type = 'O';
         dico = 'D';
