@@ -4,4 +4,4 @@ The m-file "dpre" solves the discrete-time periodic optimal control problem by a
 
 The mex-file "dprex" solves the discrete-time periodic optimal control problem by a periodic QR (using functions from matlab's internal slicot library) or a complex periodic QC method (using converted fortran to c code from the pqzschur library). The mex-file implementation is much faster, but requires compilation of the mex file which can be done by running make_dprex.m. 
 
-[![View Discrete-time Periodic Riccati Equation (DPRE)  on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/90772-discrete-time-periodic-riccati-equation-dpre)
+[![View  Discrete-time Periodic Riccati Equation (DPRE) on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/21379-discrete-time-periodic-riccati-equation-dpre)
