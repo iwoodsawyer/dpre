@@ -22,16 +22,16 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     mwSize ndim, dims[3] = {1, 1, 1};
-    mwSignedIndex m, n, p, nn, ilo, ihi, nre, iscl = 0, isqr = 0, info = 0;
+    mwSignedIndex m, n, p, nn, pp, ilo, ihi, nre, iscl = 0, isqr = 0, info = 0;
     mwSignedIndex ldwork, lzwork, ldtau, ldmin = -1, ldzero = 0, ldone = 1;
-    mwSignedIndex i, k;
+    mwSignedIndex i, j, k, e;
     double one = 1.0, half = 0.5, qnorm = 0.0, gnorm = 0.0, tol = 0.0;
-    double *Apr, *Bpr, *Qpr, *Rpr, *Spr, *Epr, *Xpr, *Kpr, *Mlpr, *Llpr;
-    double *Alpr, *Blpr, *Qlpr, *Rlpr, *Slpr, *Glpr, *Hlpr, *Zlpr, *Xlpr, *Tlpr;
+    double *Apr, *Bpr, *Qpr, *Rpr, *Spr, *Epr, *Xpr, *Kpr, *Mlpr, *Llpr, *Tlpr;
+    double *Alpr, *Blpr, *Qlpr, *Rlpr, *Slpr, *Elpr, *Glpr, *Hlpr, *Zlpr, *Xlpr;
     double *dwork, *zwork, *tau, *wr, *wi, *alpha, *beta, *rnorm, twork[2] = {0,0};
-    mwSignedIndex *ipivr, *ipiv, *iwork, *oufact, *scal, *Jlpr;
-    char job, jobb, jobe, jobg, jobs, jobx, fact, uplo, dico, hinv;
-    char type, compz, compq, trana, trans, flag, def;
+    mwSignedIndex *ipivr, *ipiv, *iwork, *oufact, *scal, *select, *Jlpr;
+    char job, jobb, jobe, jobe2, jobg, jobs, jobx, fact, uplo, dico, hinv;
+    char type, compz, compq, trana, trans, flag, def, side, diag;
     char full = 'F', full2 = 'G', lower = 'L', norm = '1';
     
     
@@ -192,9 +192,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         jobs = 'N';
     }
     else {
-        /* allocate matrix S=0 if not provided */
-        Spr = mxCalloc(n*m*p,sizeof(double));
-        Slpr = mxCalloc(n*m*p,sizeof(double));
+        /* S=0 is assumed and S does not have to be allocated */
+        Spr = NULL;
+        Slpr = NULL;
         jobs = 'Z';
     }
     
@@ -229,17 +229,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 }
             }
             Epr = mxGetData(prhs[3]);
+            Elpr = mxMalloc(n*n*p*sizeof(double));
+            memcpy(Elpr,Epr,n*n*p*sizeof(double));
             jobe = 'N';
+            jobe2 = 'G';
+            
         }
         else {
-            /* allocate matrix E=I if not provided */
-            Epr = mxCalloc(m*m*p,sizeof(double));
-            for (k=0; k<p; k++) {
-                for (i=0; i<n; i++) {
-                    Epr[k*n*n+i*n+i] = 1;
-                }
-            }
+            /* E=I is assumed and E does not have to be allocated */
+            Epr = NULL;
+            Elpr = NULL;
             jobe = 'I';
+            jobe2 = 'I';
         }
     }
     
@@ -308,6 +309,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxFree(Qlpr);
             mxFree(Rlpr);
             mxFree(Slpr);
+            mxFree(Elpr);
             mxFree(Glpr);
             mxFree(oufact);
             mxFree(ipivr);
@@ -331,12 +333,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree(dwork);
     mxFree(iwork);
     
-    if ((qnorm > gnorm) && (gnorm > 0.0)) {
+    if (0) {//((qnorm > gnorm) && (gnorm > 0.0)) {
         iscl = 1; // Do scaling
+        for (k=0; k<p; k++) {
+            // apply scaling
+            dlascl( &full2, &ldzero, &ldzero, &qnorm, &gnorm, &n, &n, &Qlpr[k*n*n], &n, &info );
+            dlascl( &full2, &ldzero, &ldzero, &gnorm, &qnorm, &n, &n, &Glpr[k*n*n], &n, &info );
+        }
     }
- 
     
-    // Perform method
+    
+    // Perform selected method
     if (isqr) { // SLICOT
         
         // Perform SB02RU
@@ -348,12 +355,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ldwork = 6*n;
         dwork = mxMalloc(ldwork*sizeof(double));
         for (k=0; k<p; k++) {
-            if (iscl) {
-                // apply scaling
-                dlascl( &full2, &ldzero, &ldzero, &qnorm, &gnorm, &n, &n, &Qlpr[k*n*n], &n, &info );
-                dlascl( &full2, &ldzero, &ldzero, &gnorm, &qnorm, &n, &n, &Glpr[k*n*n], &n, &info );
-            }
-            
             sb02ru( &dico, &hinv, &trana, &uplo, &n, &Alpr[k*n*n], &n,
                     &Glpr[k*n*n], &n, &Qlpr[k*n*n], &n, &Hlpr[k*nn*nn], &nn,
                     iwork, dwork, &ldwork, &info);
@@ -492,6 +493,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             dlacpy( &full, &n, &n, &Zlpr[k*nn*nn+n], &nn, &Xpr[k*n*n], &n );
         }
         mxFree(Zlpr);
+        
+        // Perform MB02VD
+        ipiv = mxCalloc(n,sizeof(mwSignedIndex));
+        for (k=0; k<p; k++) {
+            mb02vd( &trans, &n, &n, &Tlpr[k*n*n], &n, ipiv, &Xpr[k*n*n], &n, &info );
+            if (info != 0) {
+                mxFree(Blpr);
+                mxFree(Rlpr);
+                mxFree(Slpr);
+                mxFree(Tlpr);
+                mxFree(oufact);
+                mxFree(ipivr);
+                mxFree(rnorm);
+                mxFree(ipiv);
+                mexPrintf("MB02VD returned INFO=%d.\n",info);
+                mexErrMsgTxt("MB02VD not successful.");
+            }
+        }
+        mxFree(ipiv);
+        mxFree(Tlpr);
     }
     
     else { // PQZSCHUR
@@ -505,20 +526,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         iwork = mxCalloc(m,sizeof(mwSignedIndex));
         ldwork = max(3*m,2*n+m);
         dwork = mxMalloc(ldwork*sizeof(double));
-        for (k=0; k<p; k++) {
+        for (k=0; k<p; k++) {           
             sb02oy( &type, &dico, &jobb, &fact, &uplo, &jobs, &jobe, &n, &m, &m,
-                    &Alpr[k*n*n], &n, &Glpr[k*m*n], &n, &Qlpr[k*n*n], &n, &Rpr[k*m*m], &m,
-                    &Spr[k*m*n], &n, &Epr[k*m*n], &n, &Mlpr[k*nn*nn], &nn, &Llpr[k*nn*nn], &nn,
+                    &Alpr[k*n*n], &n, &Glpr[k*n*n], &n, &Qlpr[k*n*n], &n, &Rpr[k*m*m], &m,
+                    &Spr[k*m*n], &n, &Epr[k*n*n], &n, &Mlpr[k*nn*nn], &nn, &Llpr[k*nn*nn], &nn,
                     &tol, iwork, dwork, &ldwork, &info );
             if (info != 0) {
                 mxFree(Alpr);
+                mxFree(Qlpr);
+                mxFree(Glpr);
                 mxFree(Blpr);
                 mxFree(Rlpr);
                 mxFree(Slpr);
-                mxFree(Mlpr);
+                mxFree(Elpr);
                 mxFree(Llpr);
+                mxFree(Mlpr);
                 mxFree(iwork);
                 mxFree(dwork);
+                mxFree(oufact);
+                mxFree(ipivr);
                 mxFree(rnorm);
                 if (info == 1) {
                     mexErrMsgTxt("The computed extended matrix pencil is singular,\n possibly due to rounding errors.\n");
@@ -535,49 +561,57 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxFree(Glpr);
         mxFree(dwork);
         mxFree(iwork);
+
         
-        
-        // Copy AF and BF results to complex H array
-        Hlpr = mxMalloc(nn*nn*p*2*sizeof(double));
-        Zlpr = mxMalloc(nn*nn*p*2*sizeof(double));
-        Jlpr = mxMalloc(2*p*sizeof(mwSignedIndex));
+        // Copy M and L results to complex H array and transpose and reverse order
+        pp = 2*p;
+        Hlpr = mxCalloc(2*nn*nn*pp,sizeof(double));
+        Zlpr = mxCalloc(2*nn*nn*pp,sizeof(double));
+        Jlpr = mxMalloc(pp*sizeof(mwSignedIndex));
         for (k=0; k<p; k++) {
-            dlacpy( &full, &nn, &nn, &Llpr[nn*nn*k], &nn, &Hlpr[nn*nn*2*k], &nn);
-            Jlpr[2*k] = 1;
-            dlacpy( &full, &nn, &nn, &Mlpr[nn*nn*k], &nn, &Hlpr[nn*nn*(2*k+1)], &nn);
-            Jlpr[2*k+1] = -1;
+            for (j=0; j<nn; j++) {
+                for (i=0; i<nn; i++) {
+                    Hlpr[2*nn*nn*2*k+2*nn*j+2*i] = Mlpr[nn*nn*k+nn*i+j];
+                    Hlpr[2*nn*nn*(2*k+1)+2*nn*j+2*i] = Llpr[nn*nn*k+nn*i+j];
+                    Jlpr[2*k] = 1;
+                    Jlpr[2*k+1] = -1;
+                }
+            }
         }
-        mxFree(Mlpr);
         mxFree(Llpr);
-        
+        mxFree(Mlpr);
+
         
         // Perform ZPGHRD
         compq = 'I';
         ilo = 1;
         ihi = nn;
-        ldwork = max(p,nn);
+        ldwork = max(pp,nn);
         dwork = mxMalloc(ldwork*sizeof(double));
-        lzwork = max(p,2*nn);
-        zwork = mxMalloc(2*ldwork*sizeof(double));
-        zpghrd( &compq, &p, &nn, &ilo, &ihi, Jlpr, (doublecomplex *)Hlpr,
+        lzwork = max(pp,2*nn);
+        zwork = mxMalloc(2*lzwork*sizeof(double));
+        zpghrd( &compq, &pp, &nn, &ilo, &ihi, Jlpr, (doublecomplex *)Hlpr,
                 &nn, &nn, (doublecomplex *)Zlpr, &nn, &nn,
                 dwork, &ldwork, (doublecomplex *)zwork, &lzwork, &info );
         if (info != 0) {
             mxFree(Blpr);
             mxFree(Rlpr);
             mxFree(Slpr);
+            mxFree(Elpr);
             mxFree(Jlpr);
             mxFree(Hlpr);
             mxFree(Zlpr);
             mxFree(dwork);
             mxFree(zwork);
+            mxFree(oufact);
+            mxFree(ipivr);
             mxFree(rnorm);
             mexPrintf("ZPGHRD returned INFO=%d.\n",info);
             mexErrMsgTxt("ZPGHRD not successful.");
         }
         //mxFree(dwork);
         //mxFree(zwork);
-        
+
         
         // Perform ZPGEQZ
         job = 'S';
@@ -585,7 +619,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         alpha = mxCalloc(2*nn,sizeof(double));
         beta = mxCalloc(2*nn,sizeof(double));
         scal = mxCalloc(nn,sizeof(mwSignedIndex));
-        zpgeqz( &job, &compq, &p, &nn, &ilo, &ihi, Jlpr, (doublecomplex *)Hlpr,
+        zpgeqz( &job, &compq, &pp, &nn, &ilo, &ihi, Jlpr, (doublecomplex *)Hlpr,
                 &nn, &nn, (doublecomplex *)alpha, (doublecomplex *)beta, scal,
                 (doublecomplex *)Zlpr, &nn, &nn,
                 dwork, &ldwork, (doublecomplex *)zwork, &lzwork, &info );
@@ -593,6 +627,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxFree(Blpr);
             mxFree(Rlpr);
             mxFree(Slpr);
+            mxFree(Elpr);
             mxFree(Jlpr);
             mxFree(Hlpr);
             mxFree(Zlpr);
@@ -601,64 +636,155 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxFree(scal);
             mxFree(dwork);
             mxFree(zwork);
+            mxFree(oufact);
+            mxFree(ipivr);
             mxFree(rnorm);
             mexPrintf("ZPGEQZ returned INFO=%d.\n",info);
             mexErrMsgTxt("ZPGEQZ not successful.");
         }
+        mxFree(dwork);
+        //mxFree(zwork);
+        
+        
+        // Perform ZPGORD
+        select = mxCalloc(nn,sizeof(mwSignedIndex));
+        for (i=0; i<nn; i++) {
+            // select stable  eigenvalues for leading part
+            select[i] = ((scal[i] >= 0) ? 1 : 0);
+        }
+        zpgord( &ldone, &pp, &nn, Jlpr, select, (doublecomplex *)Hlpr,
+                &nn, &nn, (doublecomplex *)alpha, (doublecomplex *)beta, 
+                scal, (doublecomplex *)Zlpr, &nn, &nn, &e,
+                (doublecomplex *)zwork, &lzwork, &info );        
+        if (info != 0) {
+            mxFree(Blpr);
+            mxFree(Rlpr);
+            mxFree(Slpr);
+            mxFree(Elpr);
+            mxFree(Hlpr);
+            mxFree(Zlpr);
+            mxFree(Jlpr);
+            mxFree(select);
+            mxFree(alpha);
+            mxFree(beta);
+            mxFree(scal);
+            mxFree(dwork);
+            mxFree(zwork);
+            mxFree(oufact);
+            mxFree(ipivr);
+            mxFree(rnorm);
+            mexPrintf("ZPGORD returned INFO=%d.\n",info);
+            mexErrMsgTxt("ZPGORD not successful.");
+        }  
+        mxFree(select);
         mxFree(Jlpr);
         mxFree(Hlpr);
-        mxFree(dwork);
         mxFree(zwork);
+
         
+        // return eigenvalues if requested
         if (nlhs > 2) {
             #if MX_HAS_INTERLEAVED_COMPLEX
             mxComplexDouble *pc = mxGetComplexDoubles(plhs[2]);
             for (i=0; i<nn; i++) {
                 pc[i].real = scalbn(alpha[2*i]/beta[2*i],(int)scal[i]);
-                pc[i].imag = scalbn(alpha[2*i+1]/beta[2*i+1],(int)scal[i]);
+                pc[i].imag = scalbn(alpha[2*i+1],(int)scal[i]);
             }
             #else
-            double *pr = mxGetData(nlhs[2]);
-            double *pi = mxGetImagData(nlhs[2]);
+            double *pr = mxGetData(plhs[2]);
+            double *pi = mxGetImagData(plhs[2]);
             for (i=0; i<nn; i++) {
-                pr[i] = scalbn(alpha[2*i]/beta[2*i],scale[i]);
-                pi[i] = scalbn(alpha[2*i+1]/beta[2*i+1],scale[i]);
+                pr[i] = scalbn(alpha[2*i]/beta[2*i],(int)scale[i]);
+                pi[i] = scalbn(alpha[2*i+1],(int)scale[i]);
             }
             #endif
         }
         mxFree(alpha);
         mxFree(beta);
         mxFree(scal);
+       
         
-        // copy part Z to T and Z
-        Tlpr = mxMalloc(p*n*n*sizeof(double));
+        // copy part Z to T and X
+        Tlpr = mxMalloc(2*p*n*n*sizeof(double));
+        Xlpr = mxMalloc(2*p*n*n*sizeof(double));
         for (k=0; k<p; k++) {
-            dlacpy( &full, &n, &n, &Zlpr[nn*nn*(2*k+1)], &nn, &Tlpr[k*n*n*k], &n );
-            dlacpy( &full, &n, &n, &Zlpr[nn*nn*(2*k+1)+n], &nn, &Xpr[k*n*n*k], &n );
+            for (j=0; j<n; j++) {
+                for (i=0; i<n; i++) {
+                    Xlpr[2*n*n*k+2*n*j+2*i]   = Zlpr[2*nn*nn*2*k+2*nn*j+2*i];
+                    Xlpr[2*n*n*k+2*n*j+2*i+1] = Zlpr[2*nn*nn*2*k+2*nn*j+2*i+1];
+                    Tlpr[2*n*n*k+2*n*j+2*i]   = Zlpr[2*nn*nn*2*k+2*nn*j+2*i+2*n];
+                    Tlpr[2*n*n*k+2*n*j+2*i+1] = Zlpr[2*nn*nn*2*k+2*nn*j+2*i+2*n+1];
+                }
+            }
         }
         mxFree(Zlpr);
-    }
-    
-    
-    // Perform MB02VD
-    ipiv = mxCalloc(n,sizeof(mwSignedIndex));
-    for (k=0; k<p; k++) {
-        mb02vd( &trans, &n, &n, &Tlpr[k*n*n], &n, ipiv, &Xpr[k*n*n], &n, &info );
-        if (info != 0) {
-            mxFree(Blpr);
-            mxFree(Rlpr);
-            mxFree(Slpr);
-            mxFree(Tlpr);
-            mxFree(oufact);
-            mxFree(ipivr);
-            mxFree(rnorm);
+        
+        
+        // Perform a complex version of MB02VD (MB02VZ does not exist)
+        ipiv = mxCalloc(2*n,sizeof(mwSignedIndex));
+        side = 'R';
+        for (k=0; k<p; k++) {
+            zgetrf( &n, &n, &Tlpr[2*k*n*n], &n, ipiv, &info );
+            if (info == 0) {
+                diag = 'N';
+                ztrsm( &side, &uplo, &trans, &diag, &n, &n, &one,
+                       &Tlpr[2*k*n*n], &n, &Xlpr[2*k*n*n], &n );
+                diag = 'U';
+                ztrsm( &side, &lower, &trans, &diag, &n, &n, &one,
+                       &Tlpr[2*k*n*n], &n, &Xlpr[2*k*n*n], &n );
+                ma02gz( &n, &Xlpr[2*k*n*n], &n, &ldone, &n, ipiv, &ldmin);
+            }
+            else {
+                mxFree(Blpr);
+                mxFree(Rlpr);
+                mxFree(Slpr);
+                mxFree(Elpr);
+                mxFree(Xlpr);
+                mxFree(Tlpr);
+                mxFree(oufact);
+                mxFree(ipivr);
+                mxFree(rnorm);
+                mxFree(ipiv);
+                mexPrintf("ZGERTF returned INFO=%d.\n",info);
+                mexErrMsgTxt("ZGERTF not successful.");
+            }
+        }
+        mxFree(ipiv);
+        mxFree(Tlpr);
+        
+        // Copy real values from complex array and reverse sign
+        for (k=0; k<p; k++) {
+            for (j=0; j<n; j++) {
+                for (i=0; i<n; i++) {
+                    Xpr[n*n*k+n*j+i] = -Xlpr[2*n*n*k+2*n*j+2*i];
+                }
+            }
+        }
+        mxFree(Xlpr);
+        
+        // Solve X from Xpr = X*E when using generalized models
+        if (lsame(&jobe, "N")) {
+            // Perform MB02VD
+            ipiv = mxCalloc(n,sizeof(mwSignedIndex));
+            for (k=0; k<p; k++) {
+                mb02vd( &trans, &n, &n, &Elpr[k*n*n], &n, ipiv, &Xpr[k*n*n], &n, &info );
+                if (info != 0) {
+                    mxFree(Blpr);
+                    mxFree(Rlpr);
+                    mxFree(Slpr);
+                    mxFree(Elpr);
+                    mxFree(oufact);
+                    mxFree(ipivr);
+                    mxFree(rnorm);
+                    mxFree(ipiv);
+                    mexPrintf("MB02VD returned INFO=%d.\n",info);
+                    mexErrMsgTxt("MB02VD not successful.");
+                }
+            }
             mxFree(ipiv);
-            mexPrintf("MB02VD returned INFO=%d.\n",info);
-            mexErrMsgTxt("MB02VD not successful.");
+            mxFree(Elpr);
         }
     }
-    mxFree(ipiv);
-    mxFree(Tlpr);
     
     
     // Make sure the solution matrix X is symmetric.
@@ -729,7 +855,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 else
                 {
                     // perform SG02ND
-                    sg02nd( &dico, &jobe, &job, &jobx, &fact, &uplo, &jobs, &trans,
+                    sg02nd( &dico, &jobe2, &job, &jobx, &fact, &uplo, &jobs, &trans,
                             &n, &m, &m, &Apr[k*n*n], &n, &Epr[k*n*n], &n,
                             &Blpr[k*m*n], &n, &Rlpr[k*m*m], &m, &ipivr[k*m], &Spr[k*m*n], &n,
                             Xlpr, &n, &rnorm[k], &Kpr[k*m*n], &m, NULL, &ldone, NULL, &ldone,
@@ -738,7 +864,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     if (info == 0) {
                         ldwork = max(ldwork,max((mwSignedIndex)twork[0],max(n+3*m+2,4*n+1)));
                         dwork = mxRealloc(dwork,ldwork*sizeof(double));
-                        sg02nd( &dico, &jobe, &job, &jobx, &fact, &uplo, &jobs, &trans,
+                        sg02nd( &dico, &jobe2, &job, &jobx, &fact, &uplo, &jobs, &trans,
                                 &n, &m, &m, &Apr[k*n*n], &n, &Epr[k*n*n], &n,
                                 &Blpr[k*m*n], &n, &Rlpr[k*m*m], &m, &ipivr[k*m], &Spr[k*m*n], &n,
                                 Xlpr, &n, &rnorm[k], &Kpr[k*m*n], &m, NULL, &ldone, NULL, &ldone,
@@ -782,7 +908,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 else
                 {
                     // perform SG02ND
-                    sg02nd( &dico, &jobe, &job, &jobx, &fact, &uplo, &jobs, &trans,
+                    sg02nd( &dico, &jobe2, &job, &jobx, &fact, &uplo, &jobs, &trans,
                             &n, &m, &m, &Apr[k*n*n], &n, &Epr[k*n*n], &n,
                             &Blpr[k*m*n], &n, &Rlpr[k*m*m], &m, ipiv, &Spr[k*m*n], &n,
                             Xlpr, &n, &rnorm[k], &Kpr[k*m*n], &m, NULL, &ldone, NULL, &ldone,
@@ -791,7 +917,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     if (info == 0) {
                         ldwork = max(ldwork,max((mwSignedIndex)twork[0],max(n+3*m+2,4*n+1)));
                         dwork = mxRealloc(dwork,ldwork*sizeof(double));
-                        sg02nd( &dico, &jobe, &job, &jobx, &fact, &uplo, &jobs, &trans,
+                        sg02nd( &dico, &jobe2, &job, &jobx, &fact, &uplo, &jobs, &trans,
                                 &n, &m, &m, &Apr[k*n*n], &n, &Epr[k*n*n], &n,
                                 &Blpr[k*m*n], &n, &Rlpr[k*m*m], &m, ipiv, &Spr[k*m*n], &n,
                                 Xlpr, &n, &rnorm[k], &Kpr[k*m*n], &m, NULL, &ldone, NULL, &ldone,

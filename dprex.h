@@ -229,6 +229,20 @@ extern void sg02nd(
         ptrdiff_t *info
         );
 
+
+// Column interchanges in a complex matrix
+#define ma02gz FORTRAN_WRAPPER(ma02gz)
+extern void ma02gz(
+        const ptrdiff_t *n,
+        double *a,
+        const ptrdiff_t *lda,
+        const ptrdiff_t *k1,
+        const ptrdiff_t *k2,
+        const ptrdiff_t *ipiv,
+        const ptrdiff_t *incx
+        );
+
+
 // Solution of linear equations X op(A) = B
 #define mb02vd FORTRAN_WRAPPER(mb02vd)
 extern void mb02vd(
