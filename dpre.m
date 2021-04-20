@@ -193,7 +193,7 @@ else % default cyclicqz method
                 M(:,:,j) = M(:,:,j)*Y(:,:,j+1);
             end
             
-            T1 = Z(n+1:2*n+r,1:n,j)/Z(1:n,1:n,j);
+            T1 = (Z(n+1:2*n+r,1:n,j)/Z(1:n,1:n,j))/E(:,:,j);
             
             % calculate residue
             res(j) = norm(T1 - T(:,:,j));
